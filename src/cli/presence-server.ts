@@ -212,7 +212,7 @@ export async function handler(argv: ArgumentsCamelCase<Arguments>) {
         const update_interval_fest_voting_status_record = 60 * 60 * 1000; // 60 minutes
 
         const recordFestVotes = async (is_force_early = false) => {
-            const users = await Promise.all(user_naids.map(id => server.getSplatNet3User(id)));
+            const users = await Promise.all(user_naids_splatnet3.map(id => server.getSplatNet3User(id)));
 
             debug('Checking for new fest votes to record', is_force_early);
 
