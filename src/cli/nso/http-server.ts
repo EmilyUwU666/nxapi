@@ -645,9 +645,15 @@ class Server extends HttpServer {
             throw new ResponseError(400, 'invalid_request', 'Invalid value for isFavoriteFriend.');
         }
 
-        if ('isNew' in req.body && (typeof req.body.isNew !== 'boolean' ||
+        if ('isNew' in req.body && (
+            typeof req.body.isNew !== 'boolean' ||
             // Cannot set friend as isNew
             (!friend.isNew && req.body.isNew)
+        )) {
+            throw new ResponseError(400, 'invalid_request', 'Invalid value for isNew.');
+        } else if ('isNew' in req.body && req.body.isNew && (
+            'isFavoriteFriend' in req.body ||
+            'note' in req.body
         )) {
             throw new ResponseError(400, 'invalid_request', 'Invalid value for isNew.');
         }
@@ -656,6 +662,13 @@ class Server extends HttpServer {
             typeof req.body.isOnlineNotificationEnabled !== 'boolean'
         ) {
             throw new ResponseError(400, 'invalid_request', 'Invalid value for isOnlineNotificationEnabled.');
+        }
+
+        if ('note' in req.body && (
+            typeof req.body.note !== 'string' ||
+            req.body.note.length > 20
+        )) {
+            throw new ResponseError(400, 'invalid_request', 'Invalid value for note.');
         }
 
         if ('isNew' in req.body) {
@@ -668,7 +681,7 @@ class Server extends HttpServer {
                 // No change
             }
         } else {
-            if (friend.isNew && 'isFavoriteFriend' in req.body) {
+            if (friend.isNew && ('isFavoriteFriend' in req.body || 'note' in req.body)) {
                 // If updating the friend they should have been marked as not new
                 // It *is* possible to update the friend online notification setting
                 // without doing this though
@@ -698,6 +711,17 @@ class Server extends HttpServer {
 
                 // Update cached data
                 friend.isOnlineNotificationEnabled = req.body.isOnlineNotificationEnabled;
+            } else {
+                // No change
+            }
+        }
+
+        if ('note' in req.body) {
+            if (friend.note !== req.body.note) {
+                await user.nso.updateFriendNote(friend.nsaId, req.body.note);
+
+                // Update cached data
+                friend.note = req.body.note;
             } else {
                 // No change
             }

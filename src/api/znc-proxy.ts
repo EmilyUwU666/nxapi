@@ -114,6 +114,15 @@ export default class ZncProxyApi extends AbstractCoralApi implements CoralApiInt
         return createResult(result, result.friend);
     }
 
+    async updateFriendNote(nsa_id: string, note: string) {
+        if (note.length > 20) throw new TypeError('Friend note cannot be longer than 20 characters');
+
+        const result = await this.fetchProxyApi('friend/' + nsa_id, 'PATCH', JSON.stringify({
+            note,
+        }));
+        return createResult(result, {});
+    }
+
     async addFavouriteFriend(nsa_id: string) {
         const result = await this.fetchProxyApi('friend/' + nsa_id, 'PATCH', JSON.stringify({
             isFavoriteFriend: true,

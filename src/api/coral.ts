@@ -15,10 +15,10 @@ const debug = createDebug('nxapi:api:coral');
 
 const ZNCA_PLATFORM = 'Android';
 const ZNCA_PLATFORM_VERSION = '12';
-export const ZNCA_VERSION = '3.2.0'; // TODO: update to 3.1.0
+export const ZNCA_VERSION = '3.3.0';
 const ZNCA_USER_AGENT = `com.nintendo.znca/${ZNCA_VERSION}(${ZNCA_PLATFORM}/${ZNCA_PLATFORM_VERSION})`;
 
-export const ZNCA_API_COMPATIBILITY_VERSION = 'hio87-mJks_e9GNF';
+export const ZNCA_API_COMPATIBILITY_VERSION = 'w8zSLBsxR7rVoGJA';
 
 const ZNC_URL = 'https://api-lp1.znc.srv.nintendo.net';
 export const ZNCA_CLIENT_ID = '71b963c1b7b6d119';
@@ -53,6 +53,7 @@ export interface ResponseEncryption {
 export interface CoralApiInterface {
     getAnnouncements(): Promise<Result<Announcements_4>>;
     getFriendList(): Promise<Result<Friends_4>>;
+    updateFriendNote(nsa_id: string, note: string): Promise<Result<{}>>;
     addFavouriteFriend(nsa_id: string): Promise<Result<{}>>;
     removeFavouriteFriend(nsa_id: string): Promise<Result<{}>>;
     deleteFriendIsNew(nsa_id: string): Promise<Result<{}>>;
@@ -149,10 +150,18 @@ export abstract class AbstractCoralApi {
         });
     }
 
-    /** @deprecated unused */
     async getFriend(nsa_id: string) {
         return this.call<Friend_4, {nsaId: string}>('/v4/Friend/Show', {
             nsaId: nsa_id,
+        });
+    }
+
+    async updateFriendNote(nsa_id: string, note: string) {
+        if (note.length > 20) throw new TypeError('Friend note cannot be longer than 20 characters');
+
+        return this.call<{}, {friendNsaId: string; note: string}>('/v4/Friend/Note/Update', {
+            friendNsaId: nsa_id,
+            note,
         });
     }
 

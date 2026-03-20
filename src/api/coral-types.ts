@@ -181,6 +181,7 @@ export interface Friend {
 export interface Friend_4 extends Friend {
     isOnlineNotificationEnabled: boolean;
     presence: PresenceOnline_4 | PresenceOffline;
+    note: string;
 }
 
 export interface FriendRoute {
