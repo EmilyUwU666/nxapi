@@ -19,10 +19,10 @@ import { CREDITS_NOTICE, GITLAB_URL, LICENCE_NOTICE } from '../../common/constan
 import { checkUpdates, UpdateCacheData } from '../../common/update.js';
 import Users, { CoralUser } from '../../common/users.js';
 import createDebug from '../../util/debug.js';
-import { dev, dir, git, release, version } from '../../util/product.js';
+import { dev, dir, embedded_nxapi_auth_app_client_id, git, release, version } from '../../util/product.js';
 import { addUserAgent } from '../../util/useragent.js';
 import { initStorage, paths } from '../../util/storage.js';
-import { ClientAssertionProvider, NXAPI_AUTH_APP_CLIENT_ID, NXAPI_AUTH_APP_SCOPE, setClientAssertionProvider } from '../../util/nxapi-auth.js';
+import { NxapiClientAssertionProvider, setClientAssertionProvider } from '../../util/nxapi-auth.js';
 import createI18n, { languages } from '../i18n/index.js';
 import { CoralApiInterface } from '../../api/coral.js';
 import { StatusUpdateIdentifierSymbol, StatusUpdateMonitor, StatusUpdateNotify, StatusUpdateResult, StatusUpdateSubscriber } from '../../common/status.js';
@@ -175,9 +175,12 @@ export async function init() {
     initGlobals();
     addUserAgent('nxapi-app (Chromium ' + process.versions.chrome + '; Electron ' + process.versions.electron + ')');
 
-    if (NXAPI_AUTH_APP_CLIENT_ID) {
-        setClientAssertionProvider(new ClientAssertionProvider(NXAPI_AUTH_APP_CLIENT_ID, undefined,
-            NXAPI_AUTH_APP_SCOPE));
+    if (embedded_nxapi_auth_app_client_id) {
+        setClientAssertionProvider(new NxapiClientAssertionProvider(embedded_nxapi_auth_app_client_id, undefined,
+            'ca:gf ca:er ca:dr'));
+    } else if (process.env.NXAPI_AUTH_CLIENT_ID) {
+        setClientAssertionProvider(new NxapiClientAssertionProvider(process.env.NXAPI_AUTH_CLIENT_ID, undefined,
+            process.env.NXAPI_AUTH_SCOPE ?? 'ca:gf ca:er ca:dr'));
     }
 
     setAboutPanelOptions();

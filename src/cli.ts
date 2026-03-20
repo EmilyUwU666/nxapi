@@ -4,14 +4,14 @@ import { setGlobalDispatcher } from 'undici';
 import * as commands from './cli/commands.js';
 import { checkUpdates } from './common/update.js';
 import createDebug from './util/debug.js';
-import { dev, product } from './util/product.js';
+import { dev, embedded_nxapi_auth_cli_client_id, pkg, product } from './util/product.js';
 import { paths } from './util/storage.js';
 import { YargsArguments } from './util/yargs.js';
 import { addUserAgent } from './util/useragent.js';
 import { USER_AGENT_INFO_URL } from './common/constants.js';
 import { init as initGlobals } from './common/globals.js';
 import { buildEnvironmentProxyAgent } from './util/undici-proxy.js';
-import { ClientAssertionProvider, NXAPI_AUTH_CLI_CLIENT_ID, NXAPI_AUTH_CLI_SCOPE, setClientAssertionProvider } from './util/nxapi-auth.js';
+import { NxapiClientAssertionProvider, setClientAssertionProvider } from './util/nxapi-auth.js';
 
 const debug = createDebug('cli');
 
@@ -60,9 +60,15 @@ export async function main(argv = process.argv.slice(2)) {
         addUserAgent('unidentified-script');
     }
 
-    if (NXAPI_AUTH_CLI_CLIENT_ID) {
-        setClientAssertionProvider(new ClientAssertionProvider(NXAPI_AUTH_CLI_CLIENT_ID, undefined,
-            NXAPI_AUTH_CLI_SCOPE));
+    if (embedded_nxapi_auth_cli_client_id) {
+        setClientAssertionProvider(new NxapiClientAssertionProvider(embedded_nxapi_auth_cli_client_id, undefined,
+            'ca:gf ca:er ca:dr ca:na'));
+    } else if (pkg.__nxapi_auth?.cli?.client_id) {
+        setClientAssertionProvider(new NxapiClientAssertionProvider(pkg.__nxapi_auth.cli.client_id, undefined,
+            'ca:gf ca:er ca:dr ca:na'));
+    } else if (process.env.NXAPI_AUTH_CLIENT_ID) {
+        setClientAssertionProvider(new NxapiClientAssertionProvider(process.env.NXAPI_AUTH_CLIENT_ID, undefined,
+            process.env.NXAPI_AUTH_SCOPE ?? 'ca:gf ca:er ca:dr'));
     }
 
     const yargs = createYargs(argv);
