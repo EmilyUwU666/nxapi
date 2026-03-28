@@ -14,6 +14,9 @@ const debugImink = createDebug('nxapi:api:imink');
 const debugZncaApi = createDebug('nxapi:api:znca-api');
 const debugZncaAuth = createDebug('nxapi:api:znca-auth');
 
+const debugZncaApiWarning = createDebug('nxapi:api:znca-api');
+debugZncaApiWarning.enabled = true;
+
 export abstract class ZncaApi {
     constructor(
         public useragent?: string
@@ -238,6 +241,11 @@ export interface AndroidZncaEncryptRequestRequest {
     token: string | null;
     data: string;
 }
+export interface AndroidZncaEncryptRequestResponse {
+    data: string;
+
+    warnings?: {error: string; error_message: string}[];
+}
 
 export interface AndroidZncaDecryptResponseRequest {
     data: string;
@@ -246,6 +254,8 @@ export interface AndroidZncaDecryptResponseRequest {
 export interface AndroidZncaDecryptResponseResponse {
     data: string;
     nsa_assertion?: string | null;
+
+    warnings?: {error: string; error_message: string}[];
 }
 
 export interface AndroidZncaFError {
@@ -447,7 +457,7 @@ export class ZncaApiNxapi extends ZncaApi implements RequestEncryptionProvider {
 
         const headers = new Headers(this.headers);
         headers.set('Content-Type', 'application/json');
-        headers.set('Accept', 'application/octet-stream');
+        headers.set('Accept', 'application/json');
         if (this.app?.platform) headers.append('X-znca-Platform', this.app.platform);
         if (this.app?.version) headers.append('X-znca-Version', this.app.version);
         if (this.auth?.token) headers.append('Authorization', 'Bearer ' + this.auth.token.token);
@@ -472,12 +482,19 @@ export class ZncaApiNxapi extends ZncaApi implements RequestEncryptionProvider {
             throw err;
         }
 
-        const encrypted_data = new Uint8Array(await response.arrayBuffer());
+        const result = await response.json() as AndroidZncaEncryptRequestResponse;
+        const encrypted_data = Buffer.from(result.data, 'base64url');
 
-        const result = defineResponse(encrypted_data, response);
+        if (result.warnings?.length) {
+            for (const error of result.warnings) {
+                debugZncaApiWarning('received warning from encrypt-request %s %o', url, error);
+            }
+        }
+
+        const encrypted_data_result = defineResponse(encrypted_data, response);
 
         return {
-            data: result,
+            data: encrypted_data_result,
         };
     }
 
