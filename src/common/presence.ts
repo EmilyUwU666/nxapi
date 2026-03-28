@@ -240,6 +240,7 @@ class ZncDiscordPresenceClient {
             if (this.rpc) {
                 const client = this.rpc.client;
                 this.rpc = null;
+                await client.clearActivity();
                 await client.destroy();
             }
 
@@ -251,6 +252,7 @@ class ZncDiscordPresenceClient {
         if (this.rpc && this.rpc.id !== client_id) {
             const client = this.rpc.client;
             this.rpc = null;
+            await client.clearActivity();
             await client.destroy();
         }
 
